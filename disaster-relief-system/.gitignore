@@ -1,0 +1,25 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# React build
+frontend/build/
+
+# OS files
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# VSCode
+.vscode/
+
+# Mac system files
+.DS_Store

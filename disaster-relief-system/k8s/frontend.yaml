@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rescuenet-frontend
+  namespace: rescuenet
+  labels:
+    app: rescuenet-frontend
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: rescuenet-frontend
+  template:
+    metadata:
+      labels:
+        app: rescuenet-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: docker.io/library/rescuenet-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rescuenet-frontend
+  namespace: rescuenet
+  labels:
+    app: rescuenet-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: rescuenet-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

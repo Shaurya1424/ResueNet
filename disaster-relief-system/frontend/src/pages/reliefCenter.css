@@ -1,0 +1,258 @@
+.rc-page {
+  display: grid;
+  gap: 16px;
+}
+
+.rc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rc-head h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.rc-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rc-head-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rc-main-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rc-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.rc-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.rc-card-head h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.rc-muted {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0;
+}
+
+.rc-occupancy {
+  display: grid;
+  gap: 8px;
+}
+
+.rc-occupancy-bar {
+  background: #f1f5f9;
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.rc-occupancy-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.rc-occupancy-fill.tone-green  { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.rc-occupancy-fill.tone-amber  { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.rc-occupancy-fill.tone-red    { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+.rc-occupancy-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #475569;
+}
+
+.rc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.rc-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rc-table td {
+  padding: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1f2937;
+}
+
+.rc-notifs {
+  display: grid;
+  gap: 8px;
+}
+
+.rc-notif {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.rc-notif strong {
+  text-transform: capitalize;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.rc-notif p {
+  margin: 2px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.rc-notif-icon {
+  margin-top: 3px;
+}
+
+/* Forms */
+.rc-form {
+  display: grid;
+  gap: 10px;
+}
+
+.rc-form label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.rc-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #0f172a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rc-input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.rc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rc-request-row {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.rc-remove {
+  padding: 8px 10px;
+}
+
+/* Empty state */
+.rc-empty {
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 48px 28px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.rc-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.rc-empty h2 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.rc-empty p {
+  margin: 0;
+  color: #64748b;
+  max-width: 480px;
+}
+
+@media (max-width: 1100px) {
+  .rc-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .rc-stats,
+  .rc-main-grid,
+  .rc-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .rc-request-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rc-request-row .rc-remove {
+    grid-column: span 2;
+    justify-self: end;
+  }
+}

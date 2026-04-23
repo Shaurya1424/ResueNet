@@ -1,0 +1,331 @@
+/* === StatusBadge === */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.ui-badge.tone-low       { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.ui-badge.tone-medium    { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.ui-badge.tone-high      { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.ui-badge.tone-critical  { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.ui-badge.tone-info      { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.ui-badge.tone-success   { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.ui-badge.tone-warning   { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.ui-badge.tone-danger    { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.ui-badge.tone-neutral   { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+.ui-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* === StatCard === */
+.ui-statcard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.ui-statcard:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.ui-statcard-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ui-statcard-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.ui-statcard-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.ui-statcard-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.ui-statcard.tone-blue   .ui-statcard-icon { background: #dbeafe; color: #1d4ed8; }
+.ui-statcard.tone-green  .ui-statcard-icon { background: #dcfce7; color: #15803d; }
+.ui-statcard.tone-amber  .ui-statcard-icon { background: #fef3c7; color: #b45309; }
+.ui-statcard.tone-red    .ui-statcard-icon { background: #fee2e2; color: #b91c1c; }
+.ui-statcard.tone-purple .ui-statcard-icon { background: #ede9fe; color: #6d28d9; }
+
+.ui-statcard.tone-blue   { border-top: 3px solid #3b82f6; }
+.ui-statcard.tone-green  { border-top: 3px solid #22c55e; }
+.ui-statcard.tone-amber  { border-top: 3px solid #f59e0b; }
+.ui-statcard.tone-red    { border-top: 3px solid #ef4444; }
+.ui-statcard.tone-purple { border-top: 3px solid #8b5cf6; }
+
+/* === SlideOver === */
+.ui-slideover-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0);
+  pointer-events: none;
+  transition: background 0.2s ease;
+  z-index: 40;
+}
+
+.ui-slideover-backdrop.open {
+  background: rgba(15, 23, 42, 0.45);
+  pointer-events: auto;
+}
+
+.ui-slideover {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(440px, 92vw);
+  height: 100vh;
+  background: #fff;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-slideover.open {
+  transform: translateX(0);
+}
+
+.ui-slideover-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ui-slideover-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.ui-slideover-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.ui-slideover-body {
+  flex: 1;
+  padding: 18px 20px;
+  overflow-y: auto;
+}
+
+/* === ConfirmModal === */
+.ui-modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.ui-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  max-width: 440px;
+  width: 92%;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+  display: grid;
+  gap: 12px;
+}
+
+.ui-modal-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ui-modal-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.ui-modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 16px;
+}
+
+.ui-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ui-btn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ui-btn:hover {
+  background: #f8fafc;
+}
+
+.ui-btn.primary {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+.ui-btn.primary:hover {
+  background: #1e293b;
+}
+
+.ui-btn.danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.ui-btn.danger:hover {
+  background: #b91c1c;
+}
+
+/* === Skeleton === */
+.ui-skel {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: ui-shimmer 1.4s ease infinite;
+  border-radius: 8px;
+  display: block;
+}
+
+@keyframes ui-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.ui-skel-grid {
+  display: grid;
+  gap: 12px;
+}
+
+/* === DisasterMap === */
+.ui-map {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+/* === ActivityFeed === */
+.ui-feed {
+  display: grid;
+  gap: 10px;
+}
+
+.ui-feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.ui-feed-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3b82f6;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.ui-feed-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-feed-body strong {
+  color: #0f172a;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.ui-feed-details {
+  font-size: 13px;
+  color: #475569;
+}
+
+.ui-feed-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.ui-feed-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 16px;
+  font-size: 13px;
+}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rescuenet
+  labels:
+    app.kubernetes.io/name: rescuenet
+    app.kubernetes.io/part-of: rescuenet

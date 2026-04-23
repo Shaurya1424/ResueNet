@@ -177,6 +177,50 @@ a {
   padding: 24px;
 }
 
+.auth-split {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.auth-left {
+  background: #0f172a;
+  color: #f8fafc;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.auth-left-inner {
+  max-width: 460px;
+}
+
+.auth-left h1 {
+  font-size: 42px;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.auth-left p {
+  color: #cbd5e1;
+}
+
+.auth-logo {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.auth-right {
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
 .card {
   background: #fff;
   border: 1px solid #e7eaf2;
@@ -191,6 +235,47 @@ a {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.auth-linkline {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.auth-linkline a {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.strength-wrap {
+  margin-top: -2px;
+}
+
+.strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  display: block;
+  transition: width 0.25s ease;
+}
+
+.strength-fill.weak {
+  background: #dc2626;
+}
+
+.strength-fill.medium {
+  background: #f59e0b;
+}
+
+.strength-fill.strong {
+  background: #10b981;
 }
 
 .auth-card h2 {
@@ -368,6 +453,14 @@ a {
   .feature-grid,
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .auth-split {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-left {
+    min-height: 260px;
   }
 
   .dashboard-layout {

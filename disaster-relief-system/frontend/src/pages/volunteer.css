@@ -1,0 +1,97 @@
+.vol-dash {
+  display: grid;
+  gap: 14px;
+}
+
+.vol-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.vol-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.vol-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 6px;
+}
+
+.vol-map {
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.vol-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.vol-chip {
+  border-radius: 999px;
+  background: #e2e8f0;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.vol-notifs {
+  display: grid;
+  gap: 10px;
+}
+
+.vol-notif-item {
+  display: flex;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.vol-notif-item p {
+  margin: 3px 0 0;
+}
+
+.vol-profile-page {
+  display: grid;
+  gap: 12px;
+}
+
+.vol-profile-form {
+  max-width: 760px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px;
+}
+
+.vol-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vol-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .vol-grid,
+  .vol-skill-grid {
+    grid-template-columns: 1fr;
+  }
+}

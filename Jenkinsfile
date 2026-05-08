@@ -1,8 +1,7 @@
-// Runs Node/npm/kubectl inside disposable containers via `docker run` so the
-// Declarative `docker { }` agent is NOT required (no Docker Pipeline plugin).
-// The Jenkins agent still needs Docker CLI + daemon (e.g. mount host socket:
-//   -v /var/run/docker.sock:/var/run/docker.sock
-// ).
+// Runs Node/npm/kubectl via `docker run` (no Docker Pipeline plugin).
+// Jenkins must have `docker` on PATH and access to the host daemon. Example:
+//   cd jenkins && docker compose up -d --build
+// (see jenkins/docker-compose.yml)
 pipeline {
     agent any
 

@@ -1,0 +1,28 @@
+# Jenkins with Docker CLI + host daemon (Docker-outside-of-Docker).
+#
+# Usage (from repo root):
+#   cd jenkins && docker compose up -d --build
+#
+# Docker Desktop (macOS): socket mount alone is usually enough.
+# Native Linux host: if you get "permission denied" on docker.sock, add under "jenkins:":
+#   group_add:
+#     - "${DOCKER_GROUP_ID}"
+# and in a .env next to this file: DOCKER_GROUP_ID=<output of getent group docker | cut -d: -f3>
+#
+# Demo-only fallback: add `user: root` under `jenkins:` so the CLI can reach the daemon.
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_home:

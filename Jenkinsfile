@@ -1,6 +1,8 @@
-// Jenkins agent must be able to run Docker (e.g. Jenkins container started with:
+// Runs Node/npm/kubectl inside disposable containers via `docker run` so the
+// Declarative `docker { }` agent is NOT required (no Docker Pipeline plugin).
+// The Jenkins agent still needs Docker CLI + daemon (e.g. mount host socket:
 //   -v /var/run/docker.sock:/var/run/docker.sock
-// ). Install plugins: Pipeline, Docker Pipeline, Docker plugin.
+// ).
 pipeline {
     agent any
 
@@ -11,8 +13,8 @@ pipeline {
     }
 
     environment {
-        REGISTRY        = "docker.io"
-        IMAGE_NAMESPACE = "rescuenet"
+        REGISTRY        = 'docker.io'
+        IMAGE_NAMESPACE = 'rescuenet'
         BACKEND_IMAGE   = "${REGISTRY}/${IMAGE_NAMESPACE}/rescuenet-backend"
         FRONTEND_IMAGE  = "${REGISTRY}/${IMAGE_NAMESPACE}/rescuenet-frontend"
         GIT_SHORT       = "${env.GIT_COMMIT?.take(7) ?: 'local'}"
@@ -27,35 +29,34 @@ pipeline {
             }
         }
 
+        stage('Preflight') {
+            steps {
+                sh 'docker version'
+            }
+        }
+
         stage('Install & Lint') {
             parallel {
                 stage('Backend') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
                     steps {
-                        dir('backend') {
-                            sh 'node -v && npm -v'
-                            sh 'npm ci'
-                            sh 'npx eslint . || true'
-                        }
+                        sh '''
+                            docker run --rm \
+                                -v "$WORKSPACE:/ws" \
+                                -w /ws/backend \
+                                node:18-alpine \
+                                sh -ec 'node -v && npm -v && npm ci && npx eslint . || true'
+                        '''
                     }
                 }
                 stage('Frontend') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
                     steps {
-                        dir('frontend') {
-                            sh 'npm ci'
-                            sh 'npx eslint src || true'
-                        }
+                        sh '''
+                            docker run --rm \
+                                -v "$WORKSPACE:/ws" \
+                                -w /ws/frontend \
+                                node:18-alpine \
+                                sh -ec 'npm ci && npx eslint src || true'
+                        '''
                     }
                 }
             }
@@ -64,17 +65,14 @@ pipeline {
         stage('Test') {
             parallel {
                 stage('Backend Tests') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
                     steps {
-                        dir('backend') {
-                            sh 'npm ci'
-                            sh 'npm test -- --ci --forceExit --detectOpenHandles || true'
-                        }
+                        sh '''
+                            docker run --rm \
+                                -v "$WORKSPACE:/ws" \
+                                -w /ws/backend \
+                                node:18-alpine \
+                                sh -ec 'npm ci && npm test -- --ci --forceExit --detectOpenHandles || true'
+                        '''
                     }
                     post {
                         always {
@@ -83,58 +81,39 @@ pipeline {
                     }
                 }
                 stage('Frontend Build') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
                     steps {
-                        dir('frontend') {
-                            sh 'npm ci'
-                            sh 'CI=true npm run build'
-                        }
+                        sh '''
+                            docker run --rm \
+                                -v "$WORKSPACE:/ws" \
+                                -w /ws/frontend \
+                                node:18-alpine \
+                                sh -ec 'npm ci && CI=true npm run build'
+                        '''
                     }
                 }
             }
         }
 
         stage('Build Images') {
-            agent {
-                docker {
-                    image 'docker:24-cli'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
-                    reuseNode true
-                }
-            }
             steps {
-                script {
-                    sh """
-                        docker build \
-                            -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
-                            -t ${BACKEND_IMAGE}:latest \
-                            ./backend
-                    """
-                    sh """
-                        docker build \
-                            --build-arg REACT_APP_API_URL=/api \
-                            -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
-                            -t ${FRONTEND_IMAGE}:latest \
-                            ./frontend
-                    """
-                }
+                sh """
+                    docker build \
+                        -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
+                        -t ${BACKEND_IMAGE}:latest \
+                        ./backend
+                """
+                sh """
+                    docker build \
+                        --build-arg REACT_APP_API_URL=/api \
+                        -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                        -t ${FRONTEND_IMAGE}:latest \
+                        ./frontend
+                """
             }
         }
 
         stage('Security Scan') {
             when { expression { return env.SKIP_SCAN != 'true' } }
-            agent {
-                docker {
-                    image 'docker:24-cli'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
-                    reuseNode true
-                }
-            }
             steps {
                 sh """
                     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
@@ -149,13 +128,6 @@ pipeline {
 
         stage('Push Images') {
             when { branch 'main' }
-            agent {
-                docker {
-                    image 'docker:24-cli'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
-                    reuseNode true
-                }
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
                                                   usernameVariable: 'DOCKER_USER',
@@ -171,21 +143,23 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when { branch 'main' }
-            agent {
-                docker {
-                    // kubectl + sane shell; pin version if needed
-                    image 'alpine/k8s:latest'
-                    reuseNode true
-                }
-            }
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply -f k8s/namespace.yaml'
-                    sh 'kubectl apply -f k8s/'
-                    sh "kubectl set image deployment/rescuenet-backend backend=${BACKEND_IMAGE}:${IMAGE_TAG} -n rescuenet"
-                    sh "kubectl set image deployment/rescuenet-frontend frontend=${FRONTEND_IMAGE}:${IMAGE_TAG} -n rescuenet"
-                    sh 'kubectl rollout status deployment/rescuenet-backend -n rescuenet --timeout=180s'
-                    sh 'kubectl rollout status deployment/rescuenet-frontend -n rescuenet --timeout=180s'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                        kube() {
+                            docker run --rm \
+                                -v "$WORKSPACE:/ws" \
+                                -v "$KUBECONFIG_FILE:/root/.kube/config:ro" \
+                                -w /ws \
+                                alpine/k8s:latest kubectl "$@"
+                        }
+                        kube apply -f k8s/namespace.yaml
+                        kube apply -f k8s/
+                        kube set image deployment/rescuenet-backend "backend=${BACKEND_IMAGE}:${IMAGE_TAG}" -n rescuenet
+                        kube set image deployment/rescuenet-frontend "frontend=${FRONTEND_IMAGE}:${IMAGE_TAG}" -n rescuenet
+                        kube rollout status deployment/rescuenet-backend -n rescuenet --timeout=180s
+                        kube rollout status deployment/rescuenet-frontend -n rescuenet --timeout=180s
+                    '''
                 }
             }
         }

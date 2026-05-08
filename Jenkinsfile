@@ -3,7 +3,7 @@ pipeline {
 
     options {
         timestamps()
-        ansiColor('xterm')
+        // ansiColor requires "Ansi Color" plugin; omit if not installed
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timeout(time: 30, unit: 'MINUTES')
     }

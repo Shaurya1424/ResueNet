@@ -104,6 +104,35 @@ describe("POST /api/auth/register", () => {
   });
 });
 
+describe("POST /api/auth/register admin signup policy", () => {
+  afterEach(() => {
+    delete process.env.ALLOW_ADMIN_SIGNUP;
+  });
+
+  it("allows first admin when ALLOW_ADMIN_SIGNUP is false", async () => {
+    process.env.ALLOW_ADMIN_SIGNUP = "false";
+    const res = await request(app).post("/api/auth/register").send({
+      ...validAdmin,
+      email: "firstadmin-policy@rescuenet.io"
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it("returns 403 for a second admin when ALLOW_ADMIN_SIGNUP is false", async () => {
+    process.env.ALLOW_ADMIN_SIGNUP = "false";
+    await request(app).post("/api/auth/register").send({
+      ...validAdmin,
+      email: "admin-one@rescuenet.io"
+    });
+    const res = await request(app).post("/api/auth/register").send({
+      ...validAdmin,
+      email: "admin-two@rescuenet.io",
+      name: "Second Admin"
+    });
+    expect(res.status).toBe(403);
+  });
+});
+
 describe("POST /api/auth/login", () => {
   beforeEach(async () => {
     await request(app).post("/api/auth/register").send(validAdmin);

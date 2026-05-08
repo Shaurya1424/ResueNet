@@ -23,6 +23,16 @@ const ensureVolunteerProfile = async (user) => {
 const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    if (role === "admin" && process.env.ALLOW_ADMIN_SIGNUP === "false") {
+      const hasAdmin = await User.exists({ role: "admin" });
+      if (hasAdmin) {
+        return res.status(403).json({
+          message:
+            "Admin registration is disabled on this server (ALLOW_ADMIN_SIGNUP=false). Use an existing admin, set ALLOW_ADMIN_SIGNUP=true for development, or run backend/scripts/seed.js."
+        });
+      }
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });

@@ -287,6 +287,17 @@ a {
   color: #667085;
 }
 
+.auth-hint {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin: 0 0 12px;
+  color: #475467;
+}
+
+.auth-hint code {
+  font-size: 0.82rem;
+}
+
 .auth-submit {
   margin-top: 8px;
 }

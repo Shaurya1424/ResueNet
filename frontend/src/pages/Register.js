@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaShieldAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-import { registerUser } from "../api";
+import { registerUser, loginUser } from "../api";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -30,10 +30,24 @@ const Register = () => {
     e.preventDefault();
     try {
       await registerUser(form);
-      toast.success("Registration successful. Please login.");
-      setTimeout(() => navigate("/login"), 800);
+      const { data } = await loginUser({
+        email: form.email.trim().toLowerCase(),
+        password: form.password
+      });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("You're signed in.");
+      const { role: r } = data.user;
+      if (r === "admin") navigate("/admin");
+      else if (r === "volunteer") navigate("/volunteer");
+      else navigate("/relief-center");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      const payload = err.response?.data;
+      let msg = typeof payload?.message === "string" ? payload.message : null;
+      if (msg && Array.isArray(payload?.errors) && payload.errors.length) {
+        msg = `${msg} — ${payload.errors.map((item) => item.message).join(", ")}`;
+      }
+      toast.error(msg || "Registration failed");
     }
   };
 
@@ -53,6 +67,9 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="card auth-card">
           <h2>Create account</h2>
           <p>Register as admin, volunteer, or relief center.</p>
+          <p className="auth-hint">
+            Use <strong>a new, unused email</strong> for each account. If you ran the seed script, avoid <code>admin@rescuenet.dev</code> and the other demo addresses—they are already registered.
+          </p>
           <input className="input" name="name" placeholder="Full Name" onChange={handleChange} required />
           <input className="input" name="email" type="email" placeholder="Email" onChange={handleChange} required />
           <input className="input" name="password" type="password" placeholder="Password" onChange={handleChange} required />

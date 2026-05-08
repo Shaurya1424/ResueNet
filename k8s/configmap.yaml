@@ -7,3 +7,5 @@ data:
   NODE_ENV: "production"
   PORT: "5000"
   MONGO_URI: "mongodb://rescuenet-mongodb:27017/disasterDB"
+  # "false" blocks additional self-service admin signup after one admin exists
+  ALLOW_ADMIN_SIGNUP: "true"

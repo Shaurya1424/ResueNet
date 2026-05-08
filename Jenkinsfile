@@ -1,9 +1,11 @@
+// Jenkins agent must be able to run Docker (e.g. Jenkins container started with:
+//   -v /var/run/docker.sock:/var/run/docker.sock
+// ). Install plugins: Pipeline, Docker Pipeline, Docker plugin.
 pipeline {
     agent any
 
     options {
         timestamps()
-        // ansiColor requires "Ansi Color" plugin; omit if not installed
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timeout(time: 30, unit: 'MINUTES')
     }
@@ -28,6 +30,12 @@ pipeline {
         stage('Install & Lint') {
             parallel {
                 stage('Backend') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
                     steps {
                         dir('backend') {
                             sh 'node -v && npm -v'
@@ -37,6 +45,12 @@ pipeline {
                     }
                 }
                 stage('Frontend') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
                     steps {
                         dir('frontend') {
                             sh 'npm ci'
@@ -50,8 +64,15 @@ pipeline {
         stage('Test') {
             parallel {
                 stage('Backend Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
                     steps {
                         dir('backend') {
+                            sh 'npm ci'
                             sh 'npm test -- --ci --forceExit --detectOpenHandles || true'
                         }
                     }
@@ -62,8 +83,15 @@ pipeline {
                     }
                 }
                 stage('Frontend Build') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
                     steps {
                         dir('frontend') {
+                            sh 'npm ci'
                             sh 'CI=true npm run build'
                         }
                     }
@@ -72,6 +100,13 @@ pipeline {
         }
 
         stage('Build Images') {
+            agent {
+                docker {
+                    image 'docker:24-cli'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
                     sh """
@@ -93,13 +128,20 @@ pipeline {
 
         stage('Security Scan') {
             when { expression { return env.SKIP_SCAN != 'true' } }
+            agent {
+                docker {
+                    image 'docker:24-cli'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
+                    reuseNode true
+                }
+            }
             steps {
                 sh """
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                        aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
+                        aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \\
                         ${BACKEND_IMAGE}:${IMAGE_TAG} || true
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                        aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
+                        aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \\
                         ${FRONTEND_IMAGE}:${IMAGE_TAG} || true
                 """
             }
@@ -107,6 +149,13 @@ pipeline {
 
         stage('Push Images') {
             when { branch 'main' }
+            agent {
+                docker {
+                    image 'docker:24-cli'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
+                    reuseNode true
+                }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
                                                   usernameVariable: 'DOCKER_USER',
@@ -122,18 +171,21 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when { branch 'main' }
+            agent {
+                docker {
+                    // kubectl + sane shell; pin version if needed
+                    image 'alpine/k8s:latest'
+                    reuseNode true
+                }
+            }
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh """
-                        kubectl apply -f k8s/namespace.yaml
-                        kubectl apply -f k8s/
-                        kubectl set image deployment/rescuenet-backend \
-                            backend=${BACKEND_IMAGE}:${IMAGE_TAG} -n rescuenet
-                        kubectl set image deployment/rescuenet-frontend \
-                            frontend=${FRONTEND_IMAGE}:${IMAGE_TAG} -n rescuenet
-                        kubectl rollout status deployment/rescuenet-backend -n rescuenet --timeout=180s
-                        kubectl rollout status deployment/rescuenet-frontend -n rescuenet --timeout=180s
-                    """
+                    sh 'kubectl apply -f k8s/namespace.yaml'
+                    sh 'kubectl apply -f k8s/'
+                    sh "kubectl set image deployment/rescuenet-backend backend=${BACKEND_IMAGE}:${IMAGE_TAG} -n rescuenet"
+                    sh "kubectl set image deployment/rescuenet-frontend frontend=${FRONTEND_IMAGE}:${IMAGE_TAG} -n rescuenet"
+                    sh 'kubectl rollout status deployment/rescuenet-backend -n rescuenet --timeout=180s'
+                    sh 'kubectl rollout status deployment/rescuenet-frontend -n rescuenet --timeout=180s'
                 }
             }
         }
@@ -147,7 +199,7 @@ pipeline {
             echo "Build ${env.BUILD_NUMBER} failed."
         }
         always {
-            sh 'docker image prune -f || true'
+            sh script: '''if command -v docker >/dev/null 2>&1; then docker image prune -f || true; else echo "Skipping docker prune: docker not on agent"; fi''', label: 'Prune dangling images'
         }
     }
 }

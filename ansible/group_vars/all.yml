@@ -1,0 +1,10 @@
+---
+project_name: rescuenet
+docker_compose_version: "2.20.0"
+node_version: "18"
+app_user: ubuntu
+dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
+backend_image: "{{ dockerhub_username }}/rescuenet-backend:latest"
+frontend_image: "{{ dockerhub_username }}/rescuenet-frontend:latest"
+mongo_uri: "mongodb://mongodb:27017/rescuenet"
+jwt_secret: "{{ lookup('env', 'JWT_SECRET') }}"

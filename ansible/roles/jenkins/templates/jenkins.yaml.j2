@@ -1,0 +1,10 @@
+jenkins:
+  systemMessage: "RescueNet CI/CD Server - Managed by Ansible"
+  numExecutors: 4
+
+unclassified:
+  sonarGlobalConfiguration:
+    buildWrapperEnabled: false
+    installations:
+      - name: "RescueNet-SonarQube"
+        serverUrl: "{{ sonarqube_url }}"

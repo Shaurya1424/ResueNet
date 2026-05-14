@@ -1,0 +1,49 @@
+---
+- name: Apply baseline system configuration on all servers
+  hosts: all
+  gather_facts: yes
+  become: yes
+  tags: ["common", "docker", "baseline"]
+  roles:
+    - role: common
+    - role: docker
+
+- name: Configure Jenkins CI/CD server
+  hosts: jenkins
+  gather_facts: yes
+  become: yes
+  tags: ["jenkins"]
+  roles:
+    - role: jenkins
+
+- name: Deploy SonarQube on monitoring server
+  hosts: monitoring
+  gather_facts: yes
+  become: yes
+  tags: ["sonarqube"]
+  roles:
+    - role: sonarqube
+
+- name: Install Kubernetes tooling on application server
+  hosts: app_servers
+  gather_facts: yes
+  become: yes
+  tags: ["kubernetes"]
+  roles:
+    - role: kubernetes
+
+- name: Deploy RescueNet workloads to Minikube
+  hosts: app_servers
+  gather_facts: yes
+  become: yes
+  tags: ["rescuenet-deploy", "deploy"]
+  roles:
+    - role: rescuenet-deploy
+
+- name: Configure Prometheus and Grafana monitoring stack
+  hosts: monitoring
+  gather_facts: yes
+  become: yes
+  tags: ["monitoring"]
+  roles:
+    - role: monitoring

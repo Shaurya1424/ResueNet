@@ -1,0 +1,26 @@
+# Copy this file to terraform.tfvars and replace placeholders.
+
+# AWS region for deployment
+aws_region = "us-east-1"
+
+# VPC CIDR range for RescueNet networking
+vpc_cidr = "10.0.0.0/16"
+
+# Ubuntu 22.04 LTS AMI ID (update for your chosen region)
+ubuntu_ami = "ami-0c55b159cbfafe1f0"
+
+# EC2 instance type for Jenkins server
+jenkins_instance_type = "t2.medium"
+
+# EC2 instance type for application server
+app_instance_type = "t2.medium"
+
+# Name of an existing EC2 Key Pair in your AWS account
+key_pair_name = "your-ec2-keypair-name"
+
+# Admin IP/CIDR allowed for SSH, Jenkins UI, Prometheus, and Grafana
+admin_cidr = "203.0.113.5/32"
+
+# Project and environment tags
+project_name = "rescuenet"
+environment  = "dev"

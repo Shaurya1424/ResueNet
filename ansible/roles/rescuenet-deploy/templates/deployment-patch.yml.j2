@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rescuenet-backend
+  namespace: rescuenet
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          image: {{ backend_image }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rescuenet-frontend
+  namespace: rescuenet
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          image: {{ frontend_image }}

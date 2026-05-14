@@ -1,0 +1,7 @@
+---
+prometheus_port: 9090
+grafana_port: 3001
+grafana_admin_user: admin
+grafana_admin_password: "{{ lookup('env', 'GRAFANA_PASSWORD') }}"
+prometheus_scrape_interval: 15s
+app_server_ip: "{{ hostvars[groups['app_servers'][0]].ansible_host }}"

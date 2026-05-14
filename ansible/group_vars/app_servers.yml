@@ -1,0 +1,4 @@
+---
+k8s_namespace: rescuenet
+minikube_memory_mb: 3000
+minikube_cpus: 2

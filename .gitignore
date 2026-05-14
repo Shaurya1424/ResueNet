@@ -25,3 +25,13 @@ docker-compose.override.yml
 
 # Mac system files
 .DS_Store
+
+# Terraform (local plugins, state, secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan.binary
+crash.log
+override.tf
+terraform.tfvars

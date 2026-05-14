@@ -1,0 +1,69 @@
+---
+- name: Ensure rescuenet namespace exists
+  ansible.builtin.shell: kubectl create namespace rescuenet --dry-run=client -o yaml | kubectl apply -f -
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Apply RescueNet configmap
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/configmap.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply RescueNet secret
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/secret.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply MongoDB StatefulSet
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/mongodb-statefulset.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Wait for MongoDB rollout to complete
+  ansible.builtin.command: kubectl rollout status statefulset/mongodb -n rescuenet --timeout=120s
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Apply backend deployment
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/backend-deployment.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply backend service
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/backend-service.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply frontend deployment
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/frontend-deployment.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply frontend service
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/frontend-service.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Apply horizontal pod autoscaler
+  ansible.builtin.command: kubectl apply -f /opt/rescuenet/k8s/hpa.yaml -n rescuenet
+  become: yes
+  become_user: ubuntu
+
+- name: Wait for backend deployment rollout
+  ansible.builtin.command: kubectl rollout status deployment/rescuenet-backend -n rescuenet --timeout=180s
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Get Minikube URL for frontend service
+  ansible.builtin.command: minikube service rescuenet-frontend -n rescuenet --url
+  register: frontend_service_url
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Print frontend service URL
+  ansible.builtin.debug:
+    msg: "RescueNet frontend URL: {{ frontend_service_url.stdout }}"

@@ -13,6 +13,8 @@ RescueNet is a full-stack MERN platform for coordinating disaster operations acr
 - [Run Locally (Without Docker)](#run-locally-without-docker)
 - [Run with Docker Compose](#run-with-docker-compose)
 - [Run on Minikube (Kubernetes)](#run-on-minikube-kubernetes)
+- [Infrastructure Provisioning (Terraform)](#infrastructure-provisioning-terraform)
+- [Configuration Management (Ansible)](#configuration-management-ansible)
 - [Seed / Demo Data](#seed--demo-data)
 - [Monitoring](#monitoring)
 - [Testing](#testing)
@@ -47,6 +49,8 @@ RescueNet is a full-stack MERN platform for coordinating disaster operations acr
 - Docker Compose stack with MongoDB, Prometheus, and Grafana
 - Kubernetes manifests for namespace, workloads, ingress, autoscaling
 - Jenkins pipeline for lint/test/build/scan/deploy
+- Terraform modules for AWS networking, security groups, and compute
+- Ansible roles for host configuration, CI tooling, Kubernetes bootstrap, and deployment
 
 ---
 
@@ -72,7 +76,7 @@ High-level flow:
 - **Backend**: Node.js, Express, Mongoose, bcryptjs, jsonwebtoken, express-validator
 - **Observability**: prom-client, Prometheus, Grafana, morgan, winston
 - **Testing**: Jest, Supertest, mongodb-memory-server
-- **DevOps**: Docker, Docker Compose, Kubernetes, Jenkins
+- **DevOps**: Docker, Docker Compose, Kubernetes, Jenkins, Terraform, Ansible
 
 ---
 
@@ -105,6 +109,16 @@ rescue-net/
     backend.yaml
     frontend.yaml
     ingress.yaml
+  terraform/
+    main.tf
+    variables.tf
+    outputs.tf
+    modules/
+  ansible/
+    site.yml
+    inventory.ini
+    group_vars/
+    roles/
   docker-compose.yml
   Jenkinsfile
 ```
@@ -124,6 +138,14 @@ rescue-net/
 ### For Kubernetes workflow
 - Minikube
 - kubectl
+
+### For infrastructure provisioning
+- Terraform 1.5+
+- AWS CLI configured with credentials and region
+
+### For configuration management
+- Ansible (Core 2.14+ recommended)
+- SSH private key for the EC2 key pair used in Terraform
 
 ---
 
@@ -189,7 +211,7 @@ docker compose up --build
 
 Services:
 - Frontend: `http://localhost:3000`
-- Backend: `http://localhost:5001`
+- Backend: `http://localhost:5002` (host port 5002 avoids clashing with local dev on 5001)
 - MongoDB: `localhost:27017`
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3001`
@@ -249,6 +271,91 @@ minikube service rescuenet-frontend -n rescuenet --url
 ```
 
 Keep this terminal open while accessing the URL.
+
+---
+
+## Infrastructure Provisioning (Terraform)
+
+Terraform code lives in `terraform/` and provisions RescueNet AWS infrastructure:
+- VPC, public/private subnets, internet + NAT routing
+- Security groups for Jenkins, app nodes, MongoDB, and monitoring
+- EC2 instances for Jenkins, app/kubernetes node, and monitoring
+- Elastic IPs for stable Jenkins and app access
+
+### 1) Prepare variables
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Update at minimum:
+- `key_pair_name`
+- `admin_cidr` (must be CIDR, e.g. `203.0.113.5/32`)
+
+### 2) Initialize and validate
+
+```bash
+terraform init
+terraform validate
+```
+
+### 3) Plan and apply
+
+```bash
+terraform plan -var-file="terraform.tfvars"
+terraform apply -var-file="terraform.tfvars"
+```
+
+### 4) Destroy when done
+
+```bash
+terraform destroy -var-file="terraform.tfvars"
+```
+
+---
+
+## Configuration Management (Ansible)
+
+Ansible code lives in `ansible/` and configures the Terraform-created servers:
+- `common` + `docker` baseline on all hosts
+- Jenkins and plugin setup on the Jenkins node
+- SonarQube on monitoring node
+- Kubernetes tooling + Minikube on app node
+- RescueNet K8s deployment on app node
+- Prometheus/Grafana stack and datasource wiring on monitoring node
+
+### 1) Populate inventory
+
+Edit `ansible/inventory.ini` with Terraform output IPs for:
+- `JENKINS_PUBLIC_IP`
+- `APP_SERVER_PUBLIC_IP`
+- `MONITORING_PUBLIC_IP`
+
+### 2) Export required secrets/env vars
+
+```bash
+export DOCKERHUB_USERNAME="your-dockerhub-user"
+export JWT_SECRET="your-jwt-secret"
+export GRAFANA_PASSWORD="your-grafana-password"
+```
+
+### 3) Run playbook
+
+```bash
+cd ansible
+ansible-playbook site.yml
+```
+
+Useful alternatives:
+
+```bash
+ansible-playbook site.yml --check
+ansible-playbook site.yml --tags jenkins
+ansible-playbook site.yml --tags monitoring
+```
+
+For full Ansible details, see `ansible/README.md`.
 
 ---
 
@@ -317,6 +424,11 @@ Stages include:
 - Trivy scan
 - Optional push on `main`
 - Optional Kubernetes deploy + rollout checks
+
+Typical infra-to-delivery flow:
+1. Provision base infrastructure with Terraform (`terraform/`)
+2. Configure hosts and runtime dependencies with Ansible (`ansible/`)
+3. Run Jenkins pipeline for application CI/CD
 
 ---
 
@@ -396,7 +508,7 @@ kubectl logs -n rescuenet <frontend-pod-name>
 ```
 
 ### 4) Port conflicts locally
-Default backend host port is `5001` to avoid common conflicts on `5000`.
+Local dev uses backend port `5001` (see `backend/.env`). Docker Compose maps the API to host port **`5002`** by default so both can run together. Set `BACKEND_HOST_PORT` in a `.env` next to `docker-compose.yml` if you need a different host port.
 
 ### 5) Clear stale auth in browser
 ```js

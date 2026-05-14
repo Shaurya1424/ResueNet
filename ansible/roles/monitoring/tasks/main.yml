@@ -1,0 +1,75 @@
+---
+- name: Create monitoring directory
+  ansible.builtin.file:
+    path: /opt/monitoring
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+- name: Copy Prometheus configuration template
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /opt/monitoring/prometheus.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Copy monitoring Docker Compose template
+  ansible.builtin.template:
+    src: docker-compose.monitoring.yml.j2
+    dest: /opt/monitoring/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Start Prometheus and Grafana stack
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: /opt/monitoring
+
+- name: Wait for Prometheus to be healthy
+  ansible.builtin.uri:
+    url: http://localhost:9090/-/healthy
+    method: GET
+    status_code: 200
+  register: prometheus_health
+  retries: 10
+  delay: 5
+  until: prometheus_health.status == 200
+
+- name: Wait for Grafana to be healthy
+  ansible.builtin.uri:
+    url: http://localhost:3001/api/health
+    method: GET
+    status_code: 200
+  register: grafana_health
+  retries: 15
+  delay: 5
+  until: grafana_health.status == 200
+
+- name: Configure Grafana Prometheus datasource
+  ansible.builtin.uri:
+    url: http://localhost:3001/api/datasources
+    method: POST
+    force_basic_auth: true
+    url_username: "{{ grafana_admin_user }}"
+    url_password: "{{ grafana_admin_password }}"
+    headers:
+      Content-Type: application/json
+    body_format: json
+    body:
+      name: Prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      isDefault: true
+      basicAuth: false
+    status_code: [200, 409]
+
+- name: Print Grafana access details
+  ansible.builtin.debug:
+    msg:
+      - "Grafana URL: http://{{ ansible_host }}:{{ grafana_port }}"
+      - "Grafana username: {{ grafana_admin_user }}"
+      - "Grafana password: {{ grafana_admin_password }}"

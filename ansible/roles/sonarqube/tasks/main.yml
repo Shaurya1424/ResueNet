@@ -1,0 +1,46 @@
+---
+- name: Create SonarQube directory
+  ansible.builtin.file:
+    path: /opt/sonarqube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+- name: Set vm.max_map_count for SonarQube
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^vm\.max_map_count='
+    line: vm.max_map_count=262144
+    state: present
+
+- name: Apply sysctl settings immediately
+  ansible.builtin.command: sysctl -p
+  changed_when: false
+
+- name: Copy SonarQube docker compose file
+  ansible.builtin.template:
+    src: docker-compose.sonar.yml.j2
+    dest: /opt/sonarqube/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Start SonarQube stack with Docker Compose
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: /opt/sonarqube
+
+- name: Wait for SonarQube to become healthy
+  ansible.builtin.uri:
+    url: http://localhost:9000
+    method: GET
+    status_code: 200
+  register: sonarqube_healthcheck
+  retries: 20
+  delay: 15
+  until: sonarqube_healthcheck.status == 200
+
+- name: Print SonarQube URL
+  ansible.builtin.debug:
+    msg: "SonarQube is available at http://{{ ansible_host }}:9000"

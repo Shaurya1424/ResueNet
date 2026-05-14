@@ -9,7 +9,8 @@
     "test": "cross-env NODE_ENV=test JWT_SECRET=test-secret jest --runInBand",
     "test:watch": "cross-env NODE_ENV=test JWT_SECRET=test-secret jest --runInBand --watch",
     "test:coverage": "cross-env NODE_ENV=test JWT_SECRET=test-secret jest --runInBand --coverage",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -1,3 +1,6 @@
+# Host API port defaults to 5002 so `docker compose up` does not clash with local
+# `npm run dev` (backend/.env PORT=5001). Override: BACKEND_HOST_PORT=5001
+
 services:
   mongodb:
     image: mongo:7
@@ -26,7 +29,7 @@ services:
     container_name: rescuenet-backend
     restart: unless-stopped
     ports:
-      - "5001:5000"
+      - "${BACKEND_HOST_PORT:-5002}:5000"
     environment:
       NODE_ENV: production
       PORT: 5000
@@ -51,7 +54,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: http://localhost:5001/api
+        REACT_APP_API_URL: http://localhost:${BACKEND_HOST_PORT:-5002}/api
     image: rescuenet-frontend:latest
     container_name: rescuenet-frontend
     restart: unless-stopped

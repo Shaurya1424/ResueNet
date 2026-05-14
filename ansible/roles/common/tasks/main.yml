@@ -1,0 +1,46 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install essential packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - unzip
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - htop
+      - vim
+      - net-tools
+      - ufw
+    state: present
+
+- name: Set timezone to UTC
+  community.general.timezone:
+    name: UTC
+
+- name: Configure fs.file-max system limit
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^fs\.file-max='
+    line: fs.file-max=65536
+    state: present
+
+- name: Reload sysctl values
+  ansible.builtin.command: sysctl -p
+  changed_when: false
+
+- name: Create RescueNet application directory
+  ansible.builtin.file:
+    path: /opt/rescuenet
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"

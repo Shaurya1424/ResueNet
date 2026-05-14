@@ -1,0 +1,5 @@
+---
+jenkins_port: 8080
+jenkins_home: /var/lib/jenkins
+sonarqube_url: "http://{{ hostvars[groups['monitoring'][0]].ansible_host }}:9000"
+dockerhub_credentials_id: "dockerhub-credentials"

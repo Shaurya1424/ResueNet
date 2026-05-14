@@ -1,0 +1,50 @@
+---
+- name: Install conntrack package for Minikube
+  ansible.builtin.apt:
+    name: conntrack
+    state: present
+    update_cache: yes
+
+- name: Download kubectl binary
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Download Minikube binary
+  ansible.builtin.get_url:
+    url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    dest: /usr/local/bin/minikube
+    mode: "0755"
+
+- name: Start Minikube with Docker driver
+  ansible.builtin.command:
+    cmd: minikube start --driver=docker --memory=3000 --cpus=2
+    creates: /home/ubuntu/.minikube/profiles/minikube/config.json
+  become: yes
+  become_user: ubuntu
+
+- name: Verify Kubernetes cluster status
+  ansible.builtin.command: kubectl cluster-info
+  register: cluster_info_output
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Print Minikube cluster information
+  ansible.builtin.debug:
+    msg: "{{ cluster_info_output.stdout }}"
+
+- name: Enable Minikube metrics-server addon
+  ansible.builtin.command: minikube addons enable metrics-server
+  become: yes
+  become_user: ubuntu
+  changed_when: false
+
+- name: Copy Kubernetes manifests to app server
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../k8s/"
+    dest: /opt/rescuenet/k8s/
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"

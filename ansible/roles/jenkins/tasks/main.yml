@@ -1,0 +1,94 @@
+---
+- name: Install Java 17
+  ansible.builtin.apt:
+    name: openjdk-17-jdk
+    state: present
+    update_cache: yes
+
+- name: Add Jenkins apt key
+  ansible.builtin.get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    dest: /usr/share/keyrings/jenkins-keyring.asc
+    mode: "0644"
+
+- name: Add Jenkins apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+    filename: jenkins
+    state: present
+
+- name: Install Jenkins package
+  ansible.builtin.apt:
+    name: jenkins
+    state: present
+    update_cache: yes
+
+- name: Start and enable Jenkins service
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: yes
+
+- name: Wait for Jenkins to become available
+  ansible.builtin.wait_for:
+    port: "{{ jenkins_port }}"
+    delay: 5
+    timeout: 60
+
+- name: Read Jenkins initial admin password
+  ansible.builtin.slurp:
+    src: "{{ jenkins_home }}/secrets/initialAdminPassword"
+  register: jenkins_initial_password_raw
+
+- name: Print Jenkins initial admin password
+  ansible.builtin.debug:
+    msg: "Jenkins initial admin password: {{ jenkins_initial_password_raw.content | b64decode | trim }}"
+
+- name: Install Jenkins plugins for RescueNet pipeline
+  ansible.builtin.command:
+    cmd: >
+      jenkins-plugin-cli --plugins
+      git
+      workflow-aggregator
+      docker-workflow
+      sonar
+      blueocean
+      credentials-binding
+      pipeline-stage-view
+      github
+  register: jenkins_plugins_install
+  changed_when: "'No updates' not in jenkins_plugins_install.stdout"
+
+- name: Add jenkins user to docker group
+  ansible.builtin.user:
+    name: jenkins
+    groups: docker
+    append: yes
+
+- name: Ensure Jenkins casc config directory exists
+  ansible.builtin.file:
+    path: /var/lib/jenkins/casc_configs
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0755"
+
+- name: Copy Jenkins Configuration as Code template
+  ansible.builtin.template:
+    src: jenkins.yaml.j2
+    dest: /var/lib/jenkins/casc_configs/jenkins.yaml
+    owner: jenkins
+    group: jenkins
+    mode: "0644"
+
+- name: Configure Jenkins to load JCasC file
+  ansible.builtin.lineinfile:
+    path: /etc/default/jenkins
+    regexp: '^CASC_JENKINS_CONFIG='
+    line: 'CASC_JENKINS_CONFIG=/var/lib/jenkins/casc_configs/jenkins.yaml'
+    create: yes
+
+- name: Restart Jenkins after docker group and config changes
+  ansible.builtin.service:
+    name: jenkins
+    state: restarted
